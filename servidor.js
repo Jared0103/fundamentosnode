@@ -2,7 +2,7 @@ import express from 'express'
 import bcrypt, { hash } from 'bcrypt'
 import 'dotenv/config'
 import { initializeApp } from "firebase/app";
-import {collection, doc, getDocs, getDoc, getFirestore, setDoc} from 'firebase/firestore'
+import {collection, doc, deleteDoc, getDocs, getDoc, getFirestore, setDoc} from 'firebase/firestore'
 
 //conexion a la base de datos en Firebaase
 
