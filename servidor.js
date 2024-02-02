@@ -181,9 +181,8 @@ app.post('/delete-user', (req, res) => {
 	})
 })
 
-const port = process.env.PORT || 5000
-|
+const port = process.env.PORT || 5000;
+
 app.listen(port, () => {
-    console.log('servidor Escuchando : ', port)
-    
-})
+    console.log('Servidor Escuchando en el puerto:', port);
+});
