@@ -29,7 +29,7 @@ const corsOptions = {
 const app = express()
 app.use(express.json())
 app.use(cors(corsOptions))
-app.get('/', (req, res) =>{
+app.get('/', (_req, res) =>{
     res.send('Respuesta de raiz')
 })
 
@@ -77,9 +77,9 @@ app.post ('/signup', (req, res) =>
             // Encriptación de contraseña
             else
             {
-                bcrypt.genSalt (10, (err, salt) => {
+                bcrypt.genSalt (10, (_err, salt) => {
                     // La cadena ya encriptada
-                    bcrypt.hash (password, salt, (err, hash) => 
+                    bcrypt.hash (password, salt, (_err, hash) => 
                     {
                         req.body.password = hash
 
@@ -96,53 +96,47 @@ app.post ('/signup', (req, res) =>
     }
 
 })
+app.post('/login', (req, res) => {
+	const { usuario, password } = req.body
 
-app.post ('/login', (req, res) =>
-{
-    const {usuario, password} = req.body
-
-    if (!usuario.length || !password.length)
-    {
-        return res.json ({
-            'alerta': 'Algunos campos están vacíos'
-        })
-    }
-    
-    const usuarios = collection (db, 'usuarios')
-
-    getDoc (doc (usuarios, usuario)). then (user =>
-    {
-        if (!user.exists ())
-        {
-            res.json ({
-                'alerta': 'El usuario no existe'
-            })
-        }
-        else
-        {
-            bcrypt.compare (password, user.data ().password, (err, result) =>
-            {
-                if (result)
-                {
-                    let userFound = user.data ()
-
-                    res.json ({
-                        'alerta': 'Success',
-                        'usuario': userFound
-                    })
-                }
-                else
-                {
-                    res.json ({
-                        'alerta': 'La contraseña no coincide'
-                    })
-                }
-            })
-        }
-    })
+	if (!usuario.length || !password.length) {
+		return res.json({
+			'alerta': 'Algunos campos estan vacios'
+		})
+	}
+	const usuarios = collection(db, 'usuarios')
+	getDoc(doc(usuarios, usuario))
+		.then(user => {
+			if (!user.exists()) {
+				res.json({
+					'alerta': 'El usuario no existe'
+				})
+			} else {
+				bcrypt.compare(password, user.data().password, (err, result) => {
+					if (result) {
+						let userFound = user.data()
+						res.json({
+							'alert': 'success',
+							'usuario': {
+								'nombre': userFound.nombre,
+								'apaterno': userFound.apaterno,
+								'amaterno': userFound.amaterno,
+								'usuario': userFound.usuario,
+								'telefono': userFound.telefono
+							}
+						})
+					} else {
+						res.json({
+							'alerta': 'contraseñas no coinciden'
+						})
+					}
+				})
+			}
+		})
 })
 
-app.get('/get-all', async (req, res) => {
+
+app.get('/get-all', async (_req, res) => {
 	const usuarios = collection(db, 'usuarios')
 	const docsUsuarios = await getDocs(usuarios)
 	const arrUsuarios = []
