@@ -33,69 +33,43 @@ app.get('/', (_req, res) =>{
     res.send('Respuesta de raiz')
 })
 
-app.post ('/signup', (req, res) =>
-{
+app.post('/signup', (req, res) => {
     const { nombre, apaterno, amaterno, telefono, usuario, password } = req.body
-    console.log ('@@ body => ', req.body)
-    
-    if (nombre.length < 3)
-    {
-        res.json ({
-            'alerta': 'El nombre debe tener una longitud mínima 3 caracteres'
-        })
-    }
-    else if (!apaterno.length)
-    {
-        res.json ({
-            'alerta': 'Se debe ingresar el apellido paterno '
-        })
-    }
-    else if (!usuario.length)
-    {
-        res.json ({
-            'alerta': 'Se debe ingresar el nombre de usuario'
-        })
-    }
-    else if (password.length < 6)
-    {
-        res.json ({
-            'alerta': 'La contraseña debe tener una longitud mínima de 6 caracteres'
-        })
-    }
-    else
-    {
-        const usuarios = collection (db, 'usuarios')
-        getDoc ( doc(usuarios, usuario) ).then (user => 
-        {
-            // Validación de nombre de usuario
-            if (user.exists ())
-            {
-                res.json ({
-                    'alerta': 'El nombre de usuario ya existe'
-                })
-            }
-            // Encriptación de contraseña
-            else
-            {
-                bcrypt.genSalt (10, (_err, salt) => {
-                    // La cadena ya encriptada
-                    bcrypt.hash (password, salt, (_err, hash) => 
-                    {
+    console.log('@@ body => ', req.body)
+    if(nombre.length < 3){
+        res.json({ 'alerta': 'El nombre debe de tener minimo 3 letras'})
+    }else if (!apaterno.length) {
+        res.json({ 'alerta': 'El apaterno no puede ser vacio'})
+    }else if (!usuario.length) {
+        res.json({ 'alerta': 'El usuario no puede ser vacio'})
+    }else if (!password.length) {
+        res.json({ 'alerta': 'El password requiere 6 caracteres'})
+    }else {
+        //Guardar en la base de datos
+        const usuarios = collection(db, 'usuarios')
+        getDoc(doc(usuarios, usuario)).then(user => {
+            if(user.exists()) {
+                res.json({'alerta': 'Usuario ya existe'})
+            }else {
+                bcrypt.genSalt(10, (err, salt) => {
+                    bcrypt.hash(password,salt, (err, hash) => {
                         req.body.password = hash
+                        
+                        setDoc(doc(usuarios, usuario), req.body)
+                            .then(registered => {
+                                res.json({
+                                    'alert': 'success',
+                                    registered
 
-                        setDoc (doc (usuarios, usuario), req.body).then (registered => 
-                        {
-                            res.json ({
-                                'alerta': 'Success', registered
+                                })
                             })
-                        })
                     })
                 })
             }
         })
     }
-
 })
+
 app.post('/login', (req, res) => {
 	const { usuario, password } = req.body
 
