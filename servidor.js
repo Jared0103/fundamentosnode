@@ -3,7 +3,7 @@ import bcrypt, { hash } from 'bcrypt'
 import cors from 'cors'
 import 'dotenv/config'
 import { initializeApp } from "firebase/app";
-import {collection, doc, deleteDoc, getDocs, getDoc, getFirestore, setDoc} from 'firebase/firestore'
+import {collection, doc, deleteDoc, getDocs, getDoc, getFirestore, setDoc, updateDoc} from 'firebase/firestore'
 
 //conexion a la base de datos en Firebaase
 
@@ -139,9 +139,9 @@ app.get('/get-all', async (_req, res) => {
 
 app.post('/delete-user', (req, res) => {
 	const { usuario } = req.body
-	deleteDoc(doc(collection(db, 'usuarios'), usuario))
+	deleteDoc(doc(collection(db, 'usuarios'), usuario.usuario))
 	.then(data => {
-		if (data) {
+		if (!data) {
 			res.json({
 				'alerta': 'Usuario fue borrado'
 			})
@@ -158,6 +158,41 @@ app.post('/delete-user', (req, res) => {
 	})
 })
 
+app.post('/update-user', (req, res) => {
+    const usuario = req.body;
+
+    bcrypt.genSalt(10, (err, salt) => {
+        bcrypt.hash(usuario.password, salt, (err, hash) => {
+            if (err) {
+                console.error('Error al encriptar la contraseña:', err);
+                res.json({
+                    'alerta': 'Fallo',
+                    'message': 'Error al encriptar la contraseña'
+                });
+            } else {
+                updateDoc(doc(db, 'usuarios', usuario.usuario), {
+                    nombre: usuario.nombre,
+                    apaterno: usuario.apaterno,
+                    amaterno: usuario.amaterno,
+                    telefono: usuario.telefono,
+                    usuario: usuario.usuario,
+                    password: hash
+                })
+                .then(data => {
+                    res.json({
+                        'alerta': 'success'
+                    });
+                })
+                .catch(err => {
+                    res.json({
+                        'alerta': 'Fallo',
+                        'message': err
+                    });
+                });
+            }
+        });
+    });
+});
 
 const port = process.env.PORT || 5000;
 
