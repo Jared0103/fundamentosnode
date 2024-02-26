@@ -1,12 +1,12 @@
 import express from 'express'
 import bcrypt, { hash } from 'bcrypt'
 import cors from 'cors'
+import jwt from 'jsonwebtoken'
 import 'dotenv/config'
 import { initializeApp } from "firebase/app";
 import {collection, doc, deleteDoc, getDocs, getDoc, getFirestore, setDoc, updateDoc} from 'firebase/firestore'
 
 //conexion a la base de datos en Firebaase
-
 const firebaseConfig = {
   apiKey: process.env.apiKey,
   authDomain: "crud-practica1-6707b.firebaseapp.com",
@@ -29,6 +29,28 @@ const corsOptions = {
 const app = express()
 app.use(express.json())
 app.use(cors(corsOptions))
+
+const isAuth = (req, res, next) => {
+	const authHeader = req.headers['authorization']
+	console.log('@@ token => ', authHeader)
+	const token = authHeader && authHeader.split(' ')[1]
+	if (token === null) {
+		return res.sendStatus(401)
+	}
+	
+	jwt.verify(token, process.env.SUPER_TOP_SECRET, (err, user) => {
+		if (err) {
+			return res.sendStatus(403)
+		}
+		req.user = user
+		next()
+	})
+}
+
+const generateAccessToken = (user) => {
+    return jwt.sign(user, process.env.SUPER_TOP_SECRET)
+}
+
 app.get('/', (_req, res) =>{
     res.send('Respuesta de raiz')
 })
@@ -89,6 +111,9 @@ app.post('/login', (req, res) => {
 				bcrypt.compare(password, user.data().password, (err, result) => {
 					if (result) {
 						let userFound = user.data()
+
+						const accessToken = generateAccessToken(userFound.usuario)
+
 						res.json({
 							'alert': 'success',
 							'usuario': {
@@ -97,7 +122,8 @@ app.post('/login', (req, res) => {
 								'amaterno': userFound.amaterno,
 								'usuario': userFound.usuario,
 								'telefono': userFound.telefono
-							}
+							},
+							'token': accessToken
 						})
 					} else {
 						res.json({
@@ -110,7 +136,7 @@ app.post('/login', (req, res) => {
 })
 
 
-app.get('/get-all', async (_req, res) => {
+app.get('/get-all', isAuth, async (_req, res) => {
 	const usuarios = collection(db, 'usuarios')
 	const docsUsuarios = await getDocs(usuarios)
 	const arrUsuarios = []
@@ -193,6 +219,7 @@ app.post('/update-user', (req, res) => {
         });
     });
 });
+
 
 const port = process.env.PORT || 5000;
 
