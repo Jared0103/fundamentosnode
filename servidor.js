@@ -48,7 +48,10 @@ const isAuth = (req, res, next) => {
 }
 
 const generateAccessToken = (user) => {
-    return jwt.sign(user, process.env.SUPER_TOP_SECRET)
+	const payload = {
+		username: user
+	}
+    return jwt.sign(payload, process.env.SUPER_TOP_SECRET)
 }
 
 app.get('/', (_req, res) =>{
@@ -163,7 +166,7 @@ app.get('/get-all', isAuth, async (_req, res) => {
 	}
 })
 
-app.post('/delete-user', (req, res) => {
+app.post('/delete-user', isAuth, (req, res) => {
 	const { usuario } = req.body
 	deleteDoc(doc(collection(db, 'usuarios'), usuario.usuario))
 	.then(data => {
@@ -184,7 +187,7 @@ app.post('/delete-user', (req, res) => {
 	})
 })
 
-app.post('/update-user', (req, res) => {
+app.post('/update-user', isAuth, (req, res) => {
     const usuario = req.body;
 
     bcrypt.genSalt(10, (err, salt) => {
